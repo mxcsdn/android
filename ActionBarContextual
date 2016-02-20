@@ -1,0 +1,112 @@
+if you want to learn action bar contextual
+contextual action mode 与 action bar是没有必然关联的。这个操作是独立的，尽管这个 contextual action mode 看起来覆盖于 action bar 的位置。
+如果你是在 Android 3.0 或者更高版本，你应该使用 contextual action mode 这种方式上下文菜单来代替 floating context menu.
+
+实现代码如下
+ContextualActivity.java：
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnLongClickListener;
+import android.widget.Button;
+import android.widget.Toast;
+
+public class ContextualActivity extends Activity {
+	private Button button1;
+    private ActionMode actionMode; //使用 ActionMode 完成菜单操作
+    
+     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        button1 = (Button)findViewById(R.id.button1);      
+        //绑定用户的动作，注意这个事件必须是一个长按事件
+//1、设置监听事件并判空及调用startActionMode()方法
+        button1.setOnLongClickListener(new OnLongClickListener() {       
+            public boolean onLongClick(View v) {
+            	//ActionMode的判断是为了确保在它活动期间不会被重复的再创建，通过在创建实例的时候判断其是否为空。
+                if(actionMode != null) {
+                    return false;
+                }          
+                actionMode = startActionMode(mActionModeCallBack);
+                //当你调用startActionMode()方法的时候，系统就会返回一个ActionMode的实例，保存在成员变量中，就可以通过改变上下文条栏来触发对应的事件
+                 return true;
+            }
+        });
+    }
+     //private ActionMode.Callback mActionModeCallBack1 = new ActionMode.Callback(){};
+    //2、实现 ActionMode.Callback 接口,这里面是一个匿名内部类
+    private ActionMode.Callback mActionModeCallBack = new ActionMode.Callback() {
+        //添加四种未实现的方法     
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            // TODO Auto-generated method stub
+            return false;
+        }            
+        //表示我们要加载菜单，从XML中加载菜单
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // 等价于onCreateOptionsMenu(Menu menu),或者onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo)
+
+
+            MenuInflater inflate = getMenuInflater();
+            inflate.inflate(R.menu.menu, menu);
+            return true; //返回true 表示加载成功。
+        }
+        //处理用户的相应动作
+        //表示从点击菜单选项中捕获用户的操作
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            //等价于 onOptionsItemSelected(MenuItem item)
+            switch (item.getItemId()) {
+                case R.id.edit:
+                    Toast.makeText(ContextualActivity.this, "Edit", 3).show();
+                    break;
+                case R.id.share:
+                    Toast.makeText(ContextualActivity.this, "share", 3).show();
+                    break;
+                case R.id.delete:
+                    Toast.makeText(ContextualActivity.this, "delete", 3).show();
+                    break;
+            }
+            return false;
+        }
+		public void onDestroyActionMode(ActionMode mode) {
+			 //当我们不在使用菜单的时候， actionMode = null 在菜单销毁的时候置空
+	        actionMode = null;
+		}
+    }; 
+}
+main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="请长按次按钮》》》》》"
+        android:id="@+id/button1" />
+</LinearLayout>
+
+menu.xml
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/share"      
+        android:showAsAction="never"
+        android:title="Share"/>
+    <item
+        android:id="@+id/edit"      
+        android:showAsAction="never"
+        android:title="Edit"/>
+    <item
+        android:id="@+id/delete"     
+        android:showAsAction="never"
+        android:title="Delete"/>
+
+</menu>
+
+
